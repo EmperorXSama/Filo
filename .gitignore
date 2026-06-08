@@ -1,0 +1,46 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.exe
+*.dll
+*.pdb
+*.nupkg
+*.nuget.props
+*.nuget.targets
+[Dd]ebug/
+[Rr]elease/
+.vs/
+
+# Node.js / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+
+# Environment files
+.env
+!.env.example
+
+# IDE - JetBrains Rider
+.idea/
+*.sln.iml
+*.DotSettings.user
+
+# IDE - VS Code
+.vscode/*
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Misc
+*.bak
+*.orig
