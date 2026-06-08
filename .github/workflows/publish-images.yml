@@ -1,0 +1,67 @@
+name: Publish Container Images
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_diuitch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  publish-api:
+    name: Publish API image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set lowercase image owner
+        run: echo "IMAGE_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/Filo.Api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-api:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-api:${{ github.sha }}
+
+  publish-ui:
+    name: Publish ui image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set lowercase image owner
+        run: echo "IMAGE_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ui image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/Filo.ui/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-ui:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-ui:${{ github.sha }}
