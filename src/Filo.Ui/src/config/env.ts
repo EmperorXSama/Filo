@@ -1,5 +1,4 @@
 interface EnvConfig {
-  apiBaseUrl: string
   appName: string
 }
 
@@ -9,6 +8,5 @@ function getEnvVar(key: string, fallback?: string): string {
 }
 
 export const env: EnvConfig = {
-  apiBaseUrl: getEnvVar('VITE_API_BASE_URL'),
   appName: getEnvVar('VITE_APP_NAME', 'Filo'),
 }
