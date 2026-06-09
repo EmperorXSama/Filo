@@ -44,4 +44,22 @@ public static class ApplicationExtensions
         });
         return app;
     }
+
+    internal static IServiceCollection AddCorsExtension(this IServiceCollection service)
+    {
+        service.AddCors(options =>
+        {
+            options.AddPolicy("SpaPolicy", policy =>
+            {
+                policy
+                    .WithOrigins(
+                        "https://filo-ui.graystone-5172d13b.northeurope.azurecontainerapps.io"
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+        
+        return service;
+    }
 }

@@ -12,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Services.AddCorsExtension();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,6 +26,8 @@ if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseCors("SpaPolicy");
 app.MapControllers();
 app.MapHealthCheckExtension();
 
