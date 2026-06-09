@@ -16,7 +16,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: emperorxsama
-  RESOURCE_GROUP: rg-filo
+  RESOURCE_GROUP: filo
 
   API_APP_NAME: filo-api
   SPA_APP_NAME: filo-ui
