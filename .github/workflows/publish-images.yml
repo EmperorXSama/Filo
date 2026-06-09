@@ -37,8 +37,8 @@ jobs:
           file: src/Filo.Api/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-api:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-api:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/filo-api:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/filo-api:${{ github.sha }}
 
   publish-ui:
     name: Publish ui image
@@ -63,5 +63,5 @@ jobs:
           file: src/Filo.ui/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-ui:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/Filo-ui:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/filo-ui:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/filo-ui:${{ github.sha }}
