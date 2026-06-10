@@ -23,14 +23,24 @@ env:
   SPA_APP_NAME: filo-ui
 
 jobs:
-  apply-migration:
-    name: Apply database migration
+  review-gate:
+    name: Review migration scripts
     runs-on: ubuntu-latest
 
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     environment:
       name: production
+
+    steps:
+      - name: Waiting for migration review approval
+        run: echo "Migration scripts approved. Proceeding."
+
+  apply-migration:
+    name: Apply database migration
+    runs-on: ubuntu-latest
+
+    needs: [review-gate]
 
     steps:
       - uses: actions/checkout@v4
