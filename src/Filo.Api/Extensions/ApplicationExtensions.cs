@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Identity;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 
@@ -43,5 +45,27 @@ public static class ApplicationExtensions
             }
         });
         return app;
+    }
+
+    internal static IConfigurationManager AddKeyVaultSupport(
+        this IConfigurationManager configuration, 
+        IWebHostEnvironment env
+    )
+    {
+        if (!env.IsDevelopment())
+        {
+            var kvUri = configuration["KeyVault:Uri"]
+                                ?? throw new InvalidOperationException("keyVault uri is not set");
+            configuration.AddAzureKeyVault(
+                new Uri(kvUri),
+                new DefaultAzureCredential(),
+                new AzureKeyVaultConfigurationOptions
+                {
+                    ReloadInterval = TimeSpan.FromHours(12)
+                }
+            );
+        }
+
+        return configuration;
     }
 }
