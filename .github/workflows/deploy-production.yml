@@ -37,12 +37,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download migration scripts
-        uses: actions/download-artifact@v4
-        with:
-          name: migration-scripts
-          path: migrations/
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download ${{ github.event.workflow_run.id }} \
+            --name migration-scripts \
+            --dir migrations/
 
       - name: Log in to Azure using OIDC
         uses: azure/login@v2
