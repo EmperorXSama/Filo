@@ -70,6 +70,8 @@ jobs:
           echo "user=$(echo "$CS" | grep -oP '(?<=Username=)[^;]+')" >> $GITHUB_OUTPUT
           echo "dbname=$(echo "$CS" | grep -oP '(?<=Database=)[^;]+')" >> $GITHUB_OUTPUT
           echo "password=$(echo "$CS" | grep -oP '(?<=Password=)[^;]+')" >> $GITHUB_OUTPUT
+          SSL=$(echo "$CS" | grep -oP '(?<=Ssl Mode=)[^;]+' | tr '[:upper:]' '[:lower:]')
+          echo "sslmode=${SSL:-require}" >> $GITHUB_OUTPUT
 
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
@@ -77,6 +79,7 @@ jobs:
       - name: Apply forward migration script
         env:
           PGPASSWORD: ${{ steps.parse-conn.outputs.password }}
+          PGSSLMODE: ${{ steps.parse-conn.outputs.sslmode }}
         run: |
           psql \
             -h "${{ steps.parse-conn.outputs.host }}" \
