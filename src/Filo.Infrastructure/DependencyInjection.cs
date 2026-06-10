@@ -1,8 +1,13 @@
 ﻿using Filo.Application.Abstractions.Data;
 using Filo.Application.Common.Options;
+using Filo.Domain.Common;
+using Filo.Domain.Entities;
+using Filo.Infrastructure.Common;
 using Filo.Infrastructure.Configuration;
 using Filo.Infrastructure.Database;
 using Filo.Infrastructure.Database.Interceptors;
+using Filo.Infrastructure.Database.Repositories;
+using Filo.Infrastructure.Database.Seeders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +21,10 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection service, IConfiguration configuration)
     {
         service.AddOptionsConfiguration();
+        service.AddDatabaseSupport(configuration);
+        service.AddRepositories();
+        service.AddSeeders();
+        service.AddCommonServices();
         return service;
     }
 
@@ -54,5 +63,20 @@ public static class DependencyInjection
         });
 
         service.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+    }
+
+    private static void AddRepositories(this IServiceCollection service)
+    {
+        service.AddScoped<IRepository<DummyItem>, Repository<DummyItem>>();
+    }
+
+    private static void AddSeeders(this IServiceCollection service)
+    {
+        service.AddScoped<DummyDataSeeder>();
+    }
+
+    private static void AddCommonServices(this IServiceCollection service)
+    {
+        service.AddSingleton<IDateTimeProvider, DateTimeProvider>();
     }
 }

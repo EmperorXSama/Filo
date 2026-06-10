@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Bogus" Version="35.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Database\Configuration\" />
   </ItemGroup>
 
