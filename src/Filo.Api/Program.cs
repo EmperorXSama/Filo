@@ -1,4 +1,7 @@
 using Filo.Api.Extensions;
+using Filo.Application;
+using Filo.Infrastructure;
+using Filo.Infrastructure.Database.Seeders;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using System.Text.Json;
@@ -14,6 +17,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Configuration.AddKeyVaultSupport(builder.Environment);
+
+builder.Services.AddApplicationLayer();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -33,6 +39,14 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.AddScalarDevelopmentExtension();
+
+    await app.ApplyMigrationsAsync();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var seeder = scope.ServiceProvider.GetRequiredService<DummyDataSeeder>();
+        await seeder.SeedAsync();
+    }
 }
 
 app.MapControllers();
