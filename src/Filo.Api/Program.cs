@@ -13,6 +13,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Configuration.AddKeyVaultSupport(builder.Environment);
+
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {

@@ -17,8 +17,9 @@ public class SystemInfoController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Get()
+    public IActionResult Get([FromServices] IConfiguration config)
     {
+        var appName = config["Application:Name"] ?? "No Name Set";
         return Ok(new
         {
             machineName = Environment.MachineName,
@@ -36,7 +37,8 @@ public class SystemInfoController : ControllerBase
             processorCount = Environment.ProcessorCount,
             processUptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime(),
             applicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown",
-            userInteractive = Environment.UserInteractive
+            userInteractive = Environment.UserInteractive,
+            ApplicationName = appName
         });
     }
 }

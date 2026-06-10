@@ -26,5 +26,6 @@ export interface SystemInfo {
   processorCount: number
   processUptime: string
   applicationVersion: string
+  applicationName: string
   userInteractive: boolean
 }
