@@ -22,6 +22,7 @@ const FIELDS: { key: keyof SystemInfo; label: string }[] = [
   { key: 'processUptime', label: 'Process Uptime' },
   { key: 'applicationVersion', label: 'Application Version' },
   { key: 'userInteractive', label: 'User Interactive' },
+  { key: 'applicationName', label: 'Application Name' },
 ]
 
 function InfoRow({ label, value }: { label: string; value: string }) {

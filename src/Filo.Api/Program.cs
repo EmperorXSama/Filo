@@ -2,6 +2,7 @@ using Filo.Api.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using System.Text.Json;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Configuration.AddKeyVaultSupport(builder.Environment);
+
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -21,10 +35,6 @@ if (app.Environment.IsDevelopment())
     app.AddScalarDevelopmentExtension();
 }
 
-if (!app.Environment.IsProduction())
-{
-    app.UseHttpsRedirection();
-}
 app.MapControllers();
 app.MapHealthCheckExtension();
 

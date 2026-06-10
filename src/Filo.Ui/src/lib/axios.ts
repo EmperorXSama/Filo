@@ -1,8 +1,7 @@
 import axios from 'axios'
-import { env } from '@/config/env'
 
 const apiClient = axios.create({
-  baseURL: env.apiBaseUrl,
+  baseURL: '/api/',
   headers: {
     'Content-Type': 'application/json',
   },
