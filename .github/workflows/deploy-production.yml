@@ -61,12 +61,28 @@ jobs:
           echo "::add-mask::$CONN"
           echo "connection_string=$CONN" >> $GITHUB_OUTPUT
 
+      - name: Parse connection string parts
+        id: parse-conn
+        run: |
+          CS="${{ steps.get-conn.outputs.connection_string }}"
+          echo "host=$(echo "$CS" | grep -oP '(?<=Host=)[^;]+')" >> $GITHUB_OUTPUT
+          echo "port=$(echo "$CS" | grep -oP '(?<=Port=)[^;]+')" >> $GITHUB_OUTPUT
+          echo "user=$(echo "$CS" | grep -oP '(?<=Username=)[^;]+')" >> $GITHUB_OUTPUT
+          echo "dbname=$(echo "$CS" | grep -oP '(?<=Database=)[^;]+')" >> $GITHUB_OUTPUT
+          echo "password=$(echo "$CS" | grep -oP '(?<=Password=)[^;]+')" >> $GITHUB_OUTPUT
+
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Apply forward migration script
+        env:
+          PGPASSWORD: ${{ steps.parse-conn.outputs.password }}
         run: |
-          psql "${{ steps.get-conn.outputs.connection_string }}" \
+          psql \
+            -h "${{ steps.parse-conn.outputs.host }}" \
+            -p "${{ steps.parse-conn.outputs.port }}" \
+            -U "${{ steps.parse-conn.outputs.user }}" \
+            -d "${{ steps.parse-conn.outputs.dbname }}" \
             -f migrations/forward.sql \
             -v ON_ERROR_STOP=1
 
