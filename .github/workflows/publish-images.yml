@@ -77,8 +77,8 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install EF tools
-        run: dotnet tool install --global dotnet-ef
+      - name: Restore EF tools
+        run: dotnet tool restore
 
       - name: Generate forward (idempotent) script
         run: |
