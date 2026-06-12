@@ -18,6 +18,7 @@
 **/node_modules
 **/npm-debug.log
 **/obj
+**/appsettings.Development.json
 **/secrets.dev.yaml
 **/values.dev.yaml
 LICENSE

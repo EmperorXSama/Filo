@@ -1,13 +1,19 @@
+using Filo.Application.Abstractions.Authorization;
 using Filo.Application.Abstractions.Data;
+using Filo.Application.Abstractions.Identity;
 using Filo.Application.Common.Options;
 using Filo.Domain.Common;
 using Filo.Domain.Entities;
+using Filo.Infrastructure.Authorization;
 using Filo.Infrastructure.Common;
+using Filo.Infrastructure.Common.Authentication;
+using Filo.Infrastructure.Common.Authorization;
 using Filo.Infrastructure.Configuration;
 using Filo.Infrastructure.Database;
 using Filo.Infrastructure.Database.Interceptors;
 using Filo.Infrastructure.Database.Repositories;
 using Filo.Infrastructure.Database.Seeders;
+using Filo.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +31,9 @@ public static class DependencyInjection
         service.AddRepositories();
         service.AddSeeders();
         service.AddCommonServices();
+        service.AddAuthenticationInternal();
+        service.AddAuthorizationInternal();
+        service.AddAuth0Support();
         return service;
     }
 
@@ -35,6 +44,11 @@ public static class DependencyInjection
         service.ConfigureOptions<EmailOptionsSetup>();
         service.AddSingleton<IValidateOptions<EmailOptions>, EmailOptionsValidator>();
         service.AddOptions<EmailOptions>()
+            .ValidateOnStart();
+
+        service.ConfigureOptions<Auth0OptionsSetup>();
+        service.AddSingleton<IValidateOptions<Auth0Options>, Auth0OptionsValidator>();
+        service.AddOptions<Auth0Options>()
             .ValidateOnStart();
 
         return service;
@@ -80,5 +94,13 @@ public static class DependencyInjection
     private static void AddCommonServices(this IServiceCollection service)
     {
         service.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+    }
+
+    private static void AddAuth0Support(this IServiceCollection service)
+    {
+        service.AddHttpClient<Auth0Client>();
+
+        service.AddScoped<IIdentityProviderService, Auth0IdentityProviderService>();
+        service.AddScoped<IPermissionsService, PermissionService>();
     }
 }
