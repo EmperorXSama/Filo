@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { getSystemInfo } from '@/services'
+import { createDummyItem, getDummyItems, getSystemInfo } from '@/services'
 import { cn } from '@/utils/cn'
 import type { SystemInfo } from '@/types'
 
@@ -40,6 +41,14 @@ export function SystemInfo() {
     queryFn: getSystemInfo,
   })
 
+  const testMutation = useMutation({
+    mutationFn: async () => {
+      await createDummyItem()
+      const items = await getDummyItems()
+      return items
+    },
+  })
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-canvas">
@@ -71,29 +80,65 @@ export function SystemInfo() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas p-xl">
-      <Card
-        className={cn(
-          'w-full max-w-xl border-card-border bg-canvas shadow-none',
-          'rounded-sm',
-        )}
-      >
-        <CardHeader>
-          <CardTitle className="font-body text-section-heading text-ink">
-            System Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="divide-y divide-hairline">
-            {FIELDS.map(({ key, label }) => (
-              <InfoRow
-                key={key}
-                label={label}
-                value={String(data[key])}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex w-full max-w-xl flex-col gap-6">
+        <Card
+          className={cn(
+            'w-full border-card-border bg-canvas shadow-none',
+            'rounded-sm',
+          )}
+        >
+          <CardHeader>
+            <CardTitle className="font-body text-section-heading text-ink">
+              System Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-hairline">
+              {FIELDS.map(({ key, label }) => (
+                <InfoRow
+                  key={key}
+                  label={label}
+                  value={String(data[key])}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className={cn(
+            'w-full border-card-border bg-canvas shadow-none',
+            'rounded-sm',
+          )}
+        >
+          <CardHeader>
+            <CardTitle className="font-body text-section-heading text-ink">
+              Database Connection Test
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              variant="outline"
+              disabled={testMutation.isPending}
+              onClick={() => testMutation.mutate()}
+            >
+              {testMutation.isPending ? 'Testing...' : 'Test DB Connection'}
+            </Button>
+
+            {testMutation.isSuccess && (
+              <p className="font-body text-body text-green-600">
+                Success — {testMutation.data.length} dummy item{testMutation.data.length !== 1 ? 's' : ''} in database.
+              </p>
+            )}
+
+            {testMutation.isError && (
+              <p className="font-body text-body text-coral">
+                {(testMutation.error as { message?: string })?.message ?? 'Connection failed.'}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
