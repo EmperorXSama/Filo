@@ -1,4 +1,4 @@
-﻿using Filo.Application.Abstractions.Data;
+using Filo.Application.Abstractions.Data;
 using Filo.Application.Common.Options;
 using Filo.Domain.Common;
 using Filo.Domain.Entities;
@@ -63,11 +63,13 @@ public static class DependencyInjection
         });
 
         service.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        service.AddScoped<ICompensationService, CompensationService>();
     }
 
     private static void AddRepositories(this IServiceCollection service)
     {
         service.AddScoped<IRepository<DummyItem>, Repository<DummyItem>>();
+        service.AddScoped<IUserRepository, UserRepository>();
     }
 
     private static void AddSeeders(this IServiceCollection service)

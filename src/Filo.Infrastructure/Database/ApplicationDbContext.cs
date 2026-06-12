@@ -3,6 +3,7 @@ using Filo.Application.Abstractions.Data;
 using Filo.Domain.Common.Contracts;
 using Filo.Domain.Common.Primitives;
 using Filo.Domain.Entities;
+using Filo.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Filo.Infrastructure.Database;
@@ -10,6 +11,13 @@ namespace Filo.Infrastructure.Database;
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): DbContext(options), IUnitOfWork
 {
     public DbSet<DummyItem> DummyItems => Set<DummyItem>();
+    public DbSet<User> Users => Set<User>();
+
+    public Task RollbackAsync(CancellationToken ct = default)
+    {
+        ChangeTracker.Clear();
+        return Task.CompletedTask;
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schemas.DefaultSchema);

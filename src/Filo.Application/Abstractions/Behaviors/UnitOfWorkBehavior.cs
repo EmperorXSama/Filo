@@ -8,10 +8,12 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse> : IPipelineBehavior<
     where TResponse : IErrorOr
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICompensationService _compensationService;
 
-    public UnitOfWorkBehavior(IUnitOfWork unitOfWork)
+    public UnitOfWorkBehavior(IUnitOfWork unitOfWork, ICompensationService compensationService)
     {
         _unitOfWork = unitOfWork;
+        _compensationService = compensationService;
     }
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
@@ -24,7 +26,22 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse> : IPipelineBehavior<
         var response = await next(ct);
         if (!response.IsError)
         {
-            await _unitOfWork.SaveChangesAsync(ct);
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(ct);
+            }
+            catch
+            {
+                await _compensationService.ExecuteAllAsync(ct);
+                await _unitOfWork.RollbackAsync(ct);
+
+                var errors = new List<Error>
+                {
+                    Error.Unexpected("Database.Error", "An unexpected error occurred. Please try again later.")
+                };
+
+                return (TResponse)(dynamic)errors;
+            }
         }
 
         return response;

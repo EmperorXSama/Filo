@@ -3,5 +3,5 @@
 public interface IAuditable
 {
     DateTimeOffset CreatedOnUtc { get; }
-    DateTimeOffset UpdatedOnUtc { get; }
+    DateTimeOffset? UpdatedOnUtc { get; }
 }

@@ -6,5 +6,5 @@ public sealed record DummyItemResponse(
     string? Description,
     bool IsActive,
     DateTimeOffset CreatedOnUtc,
-    DateTimeOffset UpdatedOnUtc
+    DateTimeOffset? UpdatedOnUtc
 );
