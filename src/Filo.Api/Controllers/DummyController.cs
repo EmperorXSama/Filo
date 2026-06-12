@@ -1,4 +1,4 @@
-using ErrorOr;
+using Filo.Api.Extensions;
 using Filo.Application.Features.Dummies.Commands.CreateDummyItem;
 using Filo.Application.Features.Dummies.Commands.DeleteDummyItem;
 using Filo.Application.Features.Dummies.Commands.UpdateDummyItem;
@@ -18,14 +18,14 @@ public sealed class DummyController(ISender sender) : ControllerBase
     public async Task<IActionResult> Get(CancellationToken ct)
     {
         var result = await sender.Send(new GetDummyItemsQuery(), ct);
-        return result.Match<IActionResult>(Ok, ToProblem);
+        return result.Match<IActionResult>(Ok, errors => this.ToProblem(errors));
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new GetDummyItemQuery(id), ct);
-        return result.Match<IActionResult>(Ok, ToProblem);
+        return result.Match<IActionResult>(Ok, errors => this.ToProblem(errors));
     }
 
     [HttpPost]
@@ -34,7 +34,7 @@ public sealed class DummyController(ISender sender) : ControllerBase
         var result = await sender.Send(command, ct);
         return result.Match(
             response => CreatedAtAction(nameof(GetById), new { id = response.Id }, response),
-            ToProblem
+            errors => this.ToProblem(errors)
         );
     }
 
@@ -45,15 +45,13 @@ public sealed class DummyController(ISender sender) : ControllerBase
             return BadRequest("Route id and command id must match.");
 
         var result = await sender.Send(command, ct);
-        return result.Match<IActionResult>(Ok, ToProblem);
+        return result.Match<IActionResult>(Ok, errors => this.ToProblem(errors));
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new DeleteDummyItemCommand(id), ct);
-        return result.Match(_ => NoContent(), ToProblem);
+        return result.Match(_ => NoContent(), errors => this.ToProblem(errors));
     }
-
-    private IActionResult ToProblem(List<Error> errors) => BadRequest(errors);
 }

@@ -3,5 +3,5 @@
 public interface ISoftDeletable
 {
     bool IsDeleted { get; }
-    DateTimeOffset DeletedOnUtc { get; }
+    DateTimeOffset? DeletedOnUtc { get; }
 }

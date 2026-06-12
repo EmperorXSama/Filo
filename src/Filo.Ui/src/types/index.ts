@@ -29,3 +29,5 @@ export interface SystemInfo {
   applicationName: string
   userInteractive: boolean
 }
+
+
