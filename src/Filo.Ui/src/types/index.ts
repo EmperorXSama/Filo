@@ -1,3 +1,12 @@
+export interface DummyItem {
+  id: string
+  name: string
+  description: string | null
+  isActive: boolean
+  createdOnUtc: string
+  updatedOnUtc: string | null
+}
+
 export interface User {
   id: string
   email: string
