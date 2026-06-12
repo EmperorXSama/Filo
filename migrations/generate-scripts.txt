@@ -23,3 +23,24 @@ Prerequisites:
 
 4. To see all migrations:
    dotnet ef migrations list --project src\Filo.Infrastructure --startup-project src\Filo.Api
+
+5. EMERGENCY ROLLBACK in production (if a bad migration was applied):
+   a) Generate rollback SQL reverting the bad migration:
+      dotnet ef migrations script 20260611131922_CreateUsersRolesPermissions ^
+          20260610125636_InitialCreate --output migrations\rollback.sql ^
+          --project src\Filo.Infrastructure --startup-project src\Filo.Api
+
+   b) Apply it manually to the production database:
+      psql "Host=...;Port=5432;Database=Filo;User=...;Password=..." ^
+           -f migrations\rollback.sql
+
+   c) Commit the updated rollback.sql and push.
+
+   d) If the deployment is blocked, you can skip the migration step
+      and deploy the previous container image directly (the old code
+      will work with the reverted schema).
+
+   NOTE: The production workflow applies forward.sql BEFORE deploying
+   new containers. If a bad migration was applied, rollback the database
+   first, then the next deployment will re-apply forward.sql from scratch
+   (which is idempotent and will skip already-applied migrations).

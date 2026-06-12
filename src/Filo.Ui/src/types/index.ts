@@ -4,6 +4,16 @@ export interface User {
   name: string
 }
 
+export interface CurrentUser {
+  userId: string
+  identityId: string
+  email: string
+  fullName: string
+  roles: string[]
+  permissions: string[]
+  avatar: string
+}
+
 export interface ApiError {
   status: number
   message: string

@@ -26,6 +26,9 @@ dist-ssr/
 .env
 !.env.example
 
+# ASP.NET Core development settings
+src/Filo.Api/appsettings.Development.json
+
 # IDE - JetBrains Rider
 .idea/
 *.sln.iml
