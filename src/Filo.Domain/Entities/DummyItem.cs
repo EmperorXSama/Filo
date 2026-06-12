@@ -8,7 +8,7 @@ public sealed class DummyItem : Common.Primitives.Entity<Guid>, IAuditable
     public string? Description { get; private set; }
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedOnUtc { get; private set; }
-    public DateTimeOffset UpdatedOnUtc { get; private set; }
+    public DateTimeOffset? UpdatedOnUtc { get; private set; }
 
     private DummyItem() { }
 
