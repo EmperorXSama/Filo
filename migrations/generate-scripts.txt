@@ -1,0 +1,25 @@
+HOW TO GENERATE MIGRATION SCRIPTS
+==================================
+
+Prerequisites:
+  - Ensure dotnet-ef tool is restored: dotnet tool restore
+  - Ensure the solution builds successfully
+
+1. To add a NEW migration:
+   dotnet ef migrations add YourMigrationName ^
+       --project src\Filo.Infrastructure --startup-project src\Filo.Api
+
+2. Regenerate forward.sql (idempotent — safe to run repeatedly):
+   dotnet ef migrations script --idempotent --output migrations\forward.sql ^
+       --project src\Filo.Infrastructure --startup-project src\Filo.Api
+
+3. Generate rollback.sql (reverts the latest migration):
+   dotnet ef migrations script 20260611131922_CreateUsersRolesPermissions ^
+       20260610125636_InitialCreate --output migrations\rollback.sql ^
+       --project src\Filo.Infrastructure --startup-project src\Filo.Api
+
+   To rollback further, replace the migration names with the appropriate
+   from/to migration names (chronological order: from = current, to = target).
+
+4. To see all migrations:
+   dotnet ef migrations list --project src\Filo.Infrastructure --startup-project src\Filo.Api
