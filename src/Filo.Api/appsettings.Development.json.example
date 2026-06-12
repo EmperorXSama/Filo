@@ -15,5 +15,13 @@
     "SmtpHost": "host",
     "SmtpPort" : 587,
     "FromAddress": "something@gmail.com"
+  },
+  "Auth0": {
+    "Domain": "your-tenant.eu.auth0.com",
+    "ManagementClientId": "your-m2m-client-id",
+    "ManagementClientSecret": "your-m2m-client-secret",
+    "BffClientId": "your-bff-client-id",
+    "BffClientSecret": "your-bff-client-secret",
+    "Audience": "https://api.filo.dev"
   }
 }

@@ -1,5 +1,6 @@
 import { Outlet, Link } from 'react-router-dom'
 import { env } from '@/config/env'
+import { UserMenu } from '@/components/UserMenu'
 
 export function RootLayout() {
   return (
@@ -16,6 +17,7 @@ export function RootLayout() {
             >
               Home
             </Link>
+            <UserMenu />
           </nav>
         </div>
       </header>

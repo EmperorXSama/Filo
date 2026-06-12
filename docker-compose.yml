@@ -24,6 +24,15 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       AppVersion: local-compose
       ConnectionStrings__Database: Host=postgres;Port=5432;Database=Filo;Username=postgres;Password=postgres
+      Auth0__Domain: filo-dev.eu.auth0.com
+      Auth0__ManagementClientId: ${AUTH0_MGMT_CLIENT_ID:-6kCmhrNW6AEM0sucweFQr1lbTaNySMYm}
+      Auth0__ManagementClientSecret: ${AUTH0_MGMT_SECRET:-rjG7fUy3-eEJLg_52r61TM8f2VJ6i2MKQc2acOrXE8tr6Cqf3Yas914EH9yKbz2V}
+      Auth0__BffClientId: ${AUTH0_BFF_CLIENT_ID:-cNAIHuKup6VZE6tnGlocvz15X56aVGfo}
+      Auth0__BffClientSecret: ${AUTH0_BFF_SECRET:-9vhKpMfGD_UM7Ba_QHtG1f_9RV1Xb0xgskEy99x-qULCeoed0-DVjoStghVTyMML}
+      Auth0__Audience: https://api.filo.dev
+      Email__SmtpHost: host
+      Email__SmtpPort: 587
+      Email__FromAddress: something@gmail.com
     ports:
       - "5005:8080"
     depends_on:

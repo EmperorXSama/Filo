@@ -1,0 +1,350 @@
+================================================================================
+                    AUTH0 INTEGRATION PLAN — FILO
+================================================================================
+
+Auth0 Free Plan (2026): 7,000 active users, unlimited logins,
+Universal Login, up to 2 applications, 1 database connection.
+
+================================================================================
+AUTH0 TENANT SETUP (one-time in Auth0 Dashboard)
+================================================================================
+
+Step 1 — Create Tenant
+  - Go to https://manage.auth0.com → Create tenant
+  - Name: filo-dev (or your preferred)
+  - Region: closest to you
+  - Plan: Free
+
+Step 2 — Create Machine-to-Machine App (for user registration)
+  - Applications → Create Application → "Machine to Machine"
+  - Name: filo-api-management
+  - Select "Auth0 Management API"
+  - Scopes: create:users, delete:users, read:users, update:users
+  - Copy: Client ID, Client Secret
+
+Step 3 — Create Regular Web App (for BFF OIDC login)
+  - Applications → Create Application → "Regular Web Application"
+  - Name: filo-bff
+  - Settings:
+      Allowed Callback URLs: http://localhost:5005/api/auth/callback
+      Allowed Logout URLs:   http://localhost:5005, http://localhost:5173
+      Allowed Web Origins:   http://localhost:5173
+  - Copy: Client ID, Client Secret
+
+Step 4 — Create Database Connection
+  - Authentication → Database → Create DB Connection
+  - Name: Username-Password-Authentication (default)
+  - "Requires username" = off
+  - Applications tab → enable filo-bff
+
+Step 5 — Note the Management API Audience
+  - APIs → Auth0 Management API
+  - Audience: https://{tenant}.us.auth0.com/api/v2/
+    (used in token requests)
+
+
+================================================================================
+ARCHITECTURE OVERVIEW
+================================================================================
+
+  Browser (SPA) :5173
+       │
+       │ /api/*
+       ▼
+  API (BFF) :5005
+       │
+       ├── OIDC (login) ──────────────→ Auth0
+       │    callback, logout, token refresh
+       │
+       ├── Auth0 Management API ──────→ Auth0
+       │    user registration, deletion
+       │
+       └── PostgreSQL
+            Users, Roles, Permissions (local DB)
+
+
+================================================================================
+ROLLBACK / COMPENSATION PATTERN
+================================================================================
+
+  RegisterUserCommandHandler
+    1. Auth0IdentityProviderService.RegisterUserAsync()
+       → Auth0Client → POST /api/v2/users → returns auth0Id
+       → if Auth0 fails → ErrorOr error returned
+    2. compensationService.Register(...) → delete auth0 user if DB fails
+    3. User.Create(auth0Id, fullName, email, Role.Member)
+    4. userRepository.Insert(user)
+    5. return userId
+
+  UnitOfWorkBehavior (MediatR pipeline):
+    → SaveChangesAsync() succeeds → commit
+    → SaveChangesAsync() fails
+      → compensationService.ExecuteAllAsync() → deletes Auth0 user
+      → unitOfWork.RollbackAsync() → clears change tracker
+      → return error response
+
+
+================================================================================
+PHASE 1 — Auth0 Configuration + Infrastructure
+================================================================================
+
+  Files to CREATE:
+    1. src/Filo.Infrastructure/Configuration/Auth0Options.cs
+       Config model: Domain, ManagementClientId, ManagementClientSecret,
+                     BffClientId, BffClientSecret
+
+    2. src/Filo.Infrastructure/Configuration/Auth0OptionsSetup.cs
+       Binds Auth0 section from appsettings to Auth0Options
+
+    3. src/Filo.Infrastructure/Configuration/Auth0OptionsValidator.cs
+       Validates all fields non-null on startup
+
+    4. src/Filo.Infrastructure/Identity/UserRepresentation.cs
+       DTO: email, password, connection, given_name, family_name, name
+
+    5. src/Filo.Infrastructure/Identity/Auth0Client.cs
+       - GetManagementTokenAsync() → POST /oauth/token (client_credentials)
+       - RegisterUserAsync(UserRepresentation) → POST /api/v2/users
+       - DeleteUserAsync(string auth0Id) → DELETE /api/v2/users/{id}
+
+    6. src/Filo.Infrastructure/Identity/Auth0IdentityProviderService.cs
+       Implements IIdentityProviderService wrapping Auth0Client
+
+  Files to MODIFY:
+    7. src/Filo.Infrastructure/DependencyInjection.cs
+       Register: Auth0Options, Auth0Client (HttpClient), Auth0IdentityProviderService
+
+    8. src/Filo.Api/appsettings.Development.json
+       Add:
+         "Auth0": {
+           "Domain": "filo-dev.us.auth0.com",
+           "ManagementClientId": "...",
+           "ManagementClientSecret": "...",
+           "BffClientId": "...",
+           "BffClientSecret": "..."
+         }
+
+
+================================================================================
+PHASE 2 — Application Layer (Register User Command)
+================================================================================
+
+  Files to CREATE:
+    9.  src/Filo.Application/Abstractions/Identity/IIdentityProviderService.cs
+        Interface: RegisterUserAsync, DeleteUserAsync
+
+    10. src/Filo.Application/Abstractions/Identity/UserModel.cs
+        Record: UserModel(Email, Password, FirstName, LastName)
+
+    11. src/Filo.Application/Features/Users/Commands/RegisterUser/RegisterUserCommand.cs
+        Record command with Email, Password, FirstName, LastName
+
+    12. src/Filo.Application/Features/Users/Commands/RegisterUser/RegisterUserCommandValidator.cs
+        FluentValidation: email format, password min 8 chars, names required
+
+    13. src/Filo.Application/Features/Users/Commands/RegisterUser/RegisterUserCommandHandler.cs
+        Handler: calls IIdentityProviderService, registers compensation,
+                 creates User entity with Role.Member, inserts via repo
+
+    14. src/Filo.Application/Features/Users/Commands/RegisterUser/IdentityProviderErrors.cs
+        Static error factory methods
+
+
+================================================================================
+PHASE 3 — API Layer (Register Endpoint)
+================================================================================
+
+  Files to CREATE:
+    15. src/Filo.Api/Controllers/UsersController.cs
+        POST /api/users/register → RegisterUserCommand → CreatedAtAction | Problem
+
+    16. src/Filo.Api/Extensions/ControllerExtensions.cs
+        ToProblem() helper — maps ErrorOr errors to ProblemDetails responses
+
+    17. src/Filo.Api/Models/ApiErrorResponse.cs
+        Error response model (status, title, detail, errors)
+
+
+================================================================================
+PHASE 4 — Auth0 BFF Login Flow (OIDC + Cookie + Session)
+================================================================================
+
+  Files to CREATE:
+    18. src/Filo.Api/Controllers/AuthController.cs
+        [HttpGet("login")] → Challenge (OIDC)
+        [HttpGet("logout")] → revoke session, SignOut (Cookie + OIDC)
+        [HttpGet("check_session")] → return claims if authenticated
+
+    19. src/Filo.Infrastructure/Session/UserSession.cs
+        Model: SessionId, UserId, AccessToken, RefreshToken, TokenExpiresAt,
+               IpAddress, UserAgent, CreatedAt, ExpiresAt
+
+    20. src/Filo.Infrastructure/Session/ISessionStore.cs
+        Interface: CreateSessionAsync, GetSessionAsync, UpdateSessionTokensAsync,
+                   RevokeSessionAsync, RevokeAllUserSessionsAsync, GetUserSessionsAsync
+
+    21. src/Filo.Infrastructure/Session/InMemorySessionStore.cs
+        ConcurrentDictionary-based in-memory session storage
+
+    22. src/Filo.Infrastructure/Session/InMemoryTicketStore.cs
+        ITicketStore implementation for server-side cookie tickets
+
+    23. src/Filo.Infrastructure/Common/Authentication/CustomClaims.cs
+        Constants: Sub = "sub", Permission = "permission"
+
+    24. src/Filo.Infrastructure/Common/Authentication/CookieConfigureOptions.cs
+        Cookie: HttpOnly, SameSite=Lax, 7-day sliding, .Filo.Auth name
+        OnValidatePrincipal: validates session exists, refreshes token via
+          POST https://{domain}/oauth/token (refresh_token grant)
+
+    25. src/Filo.Infrastructure/Common/Authentication/OpenIdConnectConfigureOptions.cs
+        OIDC: authority = https://{domain}/, client_id/secret from BffClient*,
+              PKCE, scopes: openid profile email, callback /api/auth/callback
+        OnTokenValidated: creates server-side session with tokens
+
+    26. src/Filo.Infrastructure/Common/Authentication/JwtBearerConfigureOptions.cs
+        Reads issuer/audience from config, validates Auth0 JWTs
+
+    27. src/Filo.Infrastructure/Common/Authentication/AuthenticationExtension.cs
+        Registers Cookie (default), OpenIdConnect (challenge), JwtBearer schemes
+
+    28. src/Filo.Infrastructure/Common/Authorization/AuthorizationExtension.cs
+        Registers CustomClaimsTransformation, PermissionAuthorizationHandler,
+        PermissionAuthorizationPolicyProvider
+
+    29. src/Filo.Infrastructure/Common/Authorization/CustomClaimsTransformation.cs
+        IClaimsTransformation: loads permissions from DB, adds claim types
+
+    30. src/Filo.Infrastructure/Common/Authorization/PermissionRequirement.cs
+        IAuthorizationRequirement storing required permission code
+
+    31. src/Filo.Infrastructure/Common/Authorization/PermissionAuthorizationHandler.cs
+        AuthorizationHandler: checks if user has required permission claim
+
+    32. src/Filo.Infrastructure/Common/Authorization/PermissionAuthorizationPolicyProvider.cs
+        DefaultAuthorizationPolicyProvider override for dynamic policies
+
+    33. src/Filo.Infrastructure/Authorization/PermissionService.cs
+        Implements IPermissionsService via MediatR query
+
+  Key difference from old Keycloak setup:
+    - No URL rewriting (Auth0 is always external, no docker hostname)
+    - Token refresh endpoint: https://{domain}/oauth/token
+      (was: {bffOptions.Authority}/protocol/openid-connect/token)
+
+
+================================================================================
+PHASE 5 — Application Layer (Login Queries / Permissions)
+================================================================================
+
+  Files to CREATE:
+    34. src/Filo.Application/Abstractions/Authorization/IPermissionsService.cs
+        Interface: GetUserPermissions(identityId) → ErrorOr<PermissionsResponse>
+
+    35. src/Filo.Application/Abstractions/Authorization/PermissionsResponse.cs
+        Response: UserId (Guid), Permissions (HashSet<string>)
+
+    36. src/Filo.Application/Features/Users/Queries/GetCurrentUser/GetCurrentUserQuery.cs
+        Query record with IdentityId string
+
+    37. src/Filo.Application/Features/Users/Queries/GetCurrentUser/GetCurrentUserQueryHandler.cs
+        Handler: loads user by IdentityId, returns CurrentUserResponse
+
+    38. src/Filo.Application/Features/Users/Queries/GetCurrentUser/CurrentUserResponse.cs
+        Response DTO: userId, identityId, email, fullName, roles, permissions
+
+    39. src/Filo.Application/Features/Users/Queries/GetUserPermission/GetUserPermissionQuery.cs
+        Query record with IdentityId string
+
+    40. src/Filo.Application/Features/Users/Queries/GetUserPermission/GetUserPermissionQueryHandler.cs
+        Handler: loads user + permissions, returns PermissionsResponse
+
+
+================================================================================
+PHASE 6 — Wire It All Together
+================================================================================
+
+  Files to MODIFY:
+    41. src/Filo.Infrastructure/DependencyInjection.cs
+        Add: AddAuthenticationInternal(), AddAuthorizationInternal(),
+             session services, identity services back
+
+    42. src/Filo.Api/Program.cs
+        Add back:
+          app.UseAuthentication();
+          app.UseAuthorization();
+        Between UseRouting() and MapControllers()
+
+    43. src/Filo.Api/appsettings.Development.json
+        Add Authentication section for JWT Bearer (optional — if using JWT
+        directly alongside cookie auth)
+
+
+================================================================================
+PHASE 7 — Frontend (SPA)
+================================================================================
+
+  Files to CREATE:
+    44. src/Filo.Ui/src/services/auth.ts
+        login(returnUrl) → window.location.href = /api/auth/login?returnUrl=...
+        logout()         → window.location.href = /api/auth/logout
+        getCurrentUser() → apiClient.get('users/me')
+
+    45. src/Filo.Ui/src/store/authStore.ts
+        Zustand: user, isAuthenticated, isLoading, setUser, clearUser, setLoading
+
+    46. src/Filo.Ui/src/components/AuthGuard.tsx
+        Route guard: calls getCurrentUser() if not authenticated, renders Outlet
+        or redirects to /auth/login
+
+    47. src/Filo.Ui/src/components/UserMenu.tsx
+        Nav component: shows user name + sign out or sign in button
+
+    48. src/Filo.Ui/src/pages/Login.tsx
+        Reads returnUrl from query params, immediately redirects to /api/auth/login
+
+    49. src/Filo.Ui/src/pages/Dashboard.tsx
+        Protected page (behind AuthGuard)
+
+    50. src/Filo.Ui/src/types/index.ts
+        Add back CurrentUser interface (userId, identityId, email, fullName,
+        roles, permissions)
+
+  Files to MODIFY:
+    51. src/Filo.Ui/src/routes/index.tsx
+        Add back: /auth/login route, /dashboard behind AuthGuard
+
+    52. src/Filo.Ui/src/lib/axios.ts
+        Add back 401 interceptor → redirect to /api/auth/login
+
+    53. src/Filo.Ui/src/layouts/RootLayout.tsx
+        Add back <UserMenu /> component in nav
+
+
+================================================================================
+SUMMARY — FILE COUNT BY PHASE
+================================================================================
+
+  Phase                    | Create | Modify | Total
+  -------------------------|--------|--------|------
+  1  Auth0 Config + Client |    6   |   2    |   8
+  2  App Layer (Register)  |    6   |   0    |   6
+  3  API Layer (Endpoint)  |    3   |   0    |   3
+  4  BFF Login Flow        |   16   |   0    |  16
+  5  App Layer (Queries)   |    7   |   0    |   7
+  6  Wire Up               |    0   |   3    |   3
+  7  Frontend              |    7   |   4    |  11
+  -------------------------|--------|--------|------
+  TOTAL                    |   45   |   9    |  54
+
+================================================================================
+NO NEW NUGET PACKAGES NEEDED
+================================================================================
+
+  Already in project:
+    - Microsoft.AspNetCore.Authentication.JwtBearer
+    - Microsoft.AspNetCore.Authentication.OpenIdConnect
+    - Microsoft.Extensions.Http (HttpClient factory)
+    - System.Text.Json (built into .NET)
+
+  Auth0 Management API uses standard REST + JSON — no SDK required.
