@@ -19,6 +19,12 @@ export default defineConfig({
         secure: false,
       },
     },
+    watch: {
+      ignored: ['**/node_modules/**'],
+    },
+  },
+  optimizeDeps: {
+    include: ['animejs', 'react-fast-marquee'],
   },
   test: {
     globals: true,
