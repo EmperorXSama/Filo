@@ -7,6 +7,7 @@ import { RootLayout } from '@/layouts/RootLayout'
 import { Home } from '@/pages/Home'
 
 const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
+const Register = lazy(() => import('@/pages/Register').then((m) => ({ default: m.Register })))
 const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
@@ -25,6 +26,10 @@ export const routes: RouteObject[] = [
   {
     path: '/know-more',
     element: <KnowMore />,
+  },
+  {
+    path: '/get-started',
+    element: <Register />,
   },
   {
     path: '/auth/login',

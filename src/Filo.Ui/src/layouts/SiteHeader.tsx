@@ -28,9 +28,9 @@ export function SiteHeader() {
       Go to Dashboard
     </Link>
   ) : (
-    <a href="/get-started" className={primaryButtonClass}>
+    <Link to="/get-started" className={primaryButtonClass}>
       Get started
-    </a>
+    </Link>
   )
 
   return (

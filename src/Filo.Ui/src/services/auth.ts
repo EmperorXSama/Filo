@@ -15,6 +15,17 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   return data
 }
 
+export interface RegisterUserData {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+}
+
+export async function registerUser(data: RegisterUserData): Promise<void> {
+  await apiClient.post('users/register', data)
+}
+
 export async function checkSession(): Promise<Record<string, string[]>> {
   const { data } = await apiClient.get<Record<string, string[]>>('auth/check_session')
   return data
