@@ -172,15 +172,32 @@ export function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navbarRef = useRef<HTMLElement>(null)
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
   const closeMegaMenu = useCallback(() => {
     setActiveMegaMenu(null)
   }, [])
 
+  const cancelClose = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = undefined
+    }
+  }, [])
+
+  const scheduleClose = useCallback(() => {
+    cancelClose()
+    closeTimerRef.current = setTimeout(() => {
+      setActiveMegaMenu(null)
+    }, 150)
+  }, [cancelClose])
+
   const handleMouseEnter = useCallback(
     (index: number) => {
+      cancelClose()
       setActiveMegaMenu(index)
     },
-    [],
+    [cancelClose],
   )
 
   useEffect(() => {
@@ -205,6 +222,9 @@ export function Navbar({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleEscape)
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+      }
     }
   }, [closeMegaMenu])
 
@@ -230,15 +250,18 @@ export function Navbar({
                   key={item.label}
                   className={cn(item.megaMenu?.projects && 'relative flex items-center h-full')}
                   onMouseEnter={() => item.megaMenu ? handleMouseEnter(index) : closeMegaMenu()}
+                  onMouseLeave={() => item.megaMenu && scheduleClose()}
                 >
                   {item.megaMenu ? (
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        cancelClose()
                         setActiveMegaMenu(
                           activeMegaMenu === index ? null : index,
                         )
-                      }
+                      }}
+                      onMouseEnter={cancelClose}
                       className={cn(
                         'group relative flex items-center font-body text-caption text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-blue focus-visible:ring-offset-2',
                         activeMegaMenu === index && 'text-ink',
@@ -270,6 +293,8 @@ export function Navbar({
                     <MegaMenu
                       isOpen={activeMegaMenu === index}
                       projects={item.megaMenu.projects}
+                      onMouseEnter={cancelClose}
+                      onMouseLeave={scheduleClose}
                     />
                   )}
                 </div>
@@ -308,6 +333,8 @@ export function Navbar({
             key={item.label}
             isOpen={activeMegaMenu === index}
             columns={item.megaMenu.columns}
+            onMouseEnter={cancelClose}
+            onMouseLeave={scheduleClose}
           />
         ))}
       </div>

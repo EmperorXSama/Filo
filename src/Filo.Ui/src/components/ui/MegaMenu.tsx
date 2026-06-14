@@ -9,6 +9,8 @@ interface MegaMenuProps {
   columns?: MegaMenuColumn[]
   projects?: ProjectCardConfig[]
   className?: string
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 function MegaMenuColumnSection({ column }: { column: MegaMenuColumn }) {
@@ -68,12 +70,25 @@ function MegaMenuColumnSection({ column }: { column: MegaMenuColumn }) {
   )
 }
 
-export function MegaMenu({ isOpen, columns, projects, className }: MegaMenuProps) {
+export function MegaMenu({ isOpen, columns, projects, className, onMouseEnter, onMouseLeave }: MegaMenuProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
+  const animRef = useRef<{ cancel: () => void } | null>(null)
 
   useEffect(() => {
-    if (!isOpen || !panelRef.current) return
+    if (!isOpen) {
+      if (animRef.current) {
+        animRef.current.cancel()
+        animRef.current = null
+      }
+      if (panelRef.current) {
+        panelRef.current.style.removeProperty('opacity')
+        panelRef.current.style.removeProperty('transform')
+      }
+      return
+    }
+
+    if (!panelRef.current) return
 
     let cancelled = false
     const panel = panelRef.current
@@ -81,7 +96,7 @@ export function MegaMenu({ isOpen, columns, projects, className }: MegaMenuProps
     import('animejs').then(({ animate, stagger }) => {
       if (cancelled || !panelRef.current) return
 
-      animate(panel, {
+      const anim = animate(panel, {
         opacity: [0, 1],
         translateY: [-4, 0],
         duration: 200,
@@ -100,23 +115,30 @@ export function MegaMenu({ isOpen, columns, projects, className }: MegaMenuProps
           }
         },
       })
+      animRef.current = anim as { cancel: () => void }
     })
 
     return () => {
       cancelled = true
+      if (animRef.current) {
+        animRef.current.cancel()
+        animRef.current = null
+      }
     }
   }, [isOpen])
 
   return (
-    <div
-      ref={panelRef}
-      className={cn(
-        'absolute top-[calc(100%+4px)] z-50 transition-all duration-150 ease-in',
-        isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-[-8px] pointer-events-none',
-        projects ? 'left-1/2 ml-[-440px]' : 'left-0 right-0 mx-auto max-w-7xl px-xl lg:px-xxl',
-        className,
-      )}
-    >
+      <div
+        ref={panelRef}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className={cn(
+          'absolute top-[calc(100%+4px)] z-50 transition-all duration-150 ease-in',
+          isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-[-8px] pointer-events-none',
+          projects ? 'left-1/2 ml-[-440px]' : 'left-0 right-0 mx-auto max-w-7xl px-xl lg:px-xxl',
+          className,
+        )}
+      >
       <div
         className={cn(
           'rounded-md border border-hairline bg-canvas shadow-[0_8px_24px_-4px_rgba(0,0,0,0.06)]',
