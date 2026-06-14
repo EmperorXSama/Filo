@@ -11,6 +11,7 @@ const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default:
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 const SystemInfo = lazy(() => import('@/pages/SystemInfo').then((m) => ({ default: m.SystemInfo })))
+const KnowMore = lazy(() => import('@/pages/KnowMore').then((m) => ({ default: m.KnowMore })))
 
 export const routes: RouteObject[] = [
   {
@@ -20,6 +21,10 @@ export const routes: RouteObject[] = [
   {
     path: '/system-info',
     element: <SystemInfo />,
+  },
+  {
+    path: '/know-more',
+    element: <KnowMore />,
   },
   {
     path: '/auth/login',
