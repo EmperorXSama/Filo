@@ -37,7 +37,7 @@ export function SiteHeader() {
         }
         primaryAction={
           <a
-            href="#"
+            href="/get-started"
             className="inline-flex items-center justify-center whitespace-nowrap bg-primary text-on-primary font-body text-body leading-button rounded-pill px-xl py-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-blue focus-visible:ring-offset-2"
           >
             Get started

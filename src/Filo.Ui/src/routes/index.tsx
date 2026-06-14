@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components -- route config, not a component */
+
 import { lazy } from 'react'
 import type { RouteObject } from 'react-router-dom'
 import { DashboardLayout } from '@/layouts/DashboardLayout'

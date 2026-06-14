@@ -35,7 +35,7 @@ export function FiloLogo({ className, showIndicator = true, loop = false }: Filo
     })
 
     return () => { draw.pause() }
-  }, [svgId])
+  }, [svgId, loop])
 
   useEffect(() => {
     if (!showIndicator) return

@@ -93,7 +93,7 @@ const MarqueeRow = memo(function MarqueeRow({
       clearTimeout(tid)
       entrance.pause()
     }
-  }, [rowIndex])
+  }, [rowIndex, onReady])
 
   useEffect(() => {
     if (!visible || !trackRef.current) return

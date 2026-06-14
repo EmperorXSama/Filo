@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { cn } from '@/utils/cn'
 import { NavigationLink } from './NavigationLink'
 import { ProjectCard } from './ProjectCard'
-import type { JSAnimation } from 'animejs'
 import type { MegaMenuColumn, ProjectCardConfig } from '@/types/navigation'
 
 interface MegaMenuProps {
@@ -70,45 +69,11 @@ function MegaMenuColumnSection({ column }: { column: MegaMenuColumn }) {
 }
 
 export function MegaMenu({ isOpen, columns, projects, className }: MegaMenuProps) {
-  const [render, setRender] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
-  const animRef = useRef<JSAnimation | null>(null)
 
   useEffect(() => {
-    let cancelled = false
-
-    if (isOpen) {
-      setRender(true)
-    } else if (render) {
-      if (panelRef.current) {
-        import('animejs').then(({ animate }) => {
-          if (cancelled || !panelRef.current) return
-          animRef.current = animate(panelRef.current, {
-            opacity: [1, 0],
-            translateY: [0, -8],
-            duration: 150,
-            easing: 'easeInCubic',
-            complete: () => {
-              if (!cancelled) setRender(false)
-            },
-          })
-        })
-      } else {
-        setRender(false)
-      }
-    }
-
-    return () => {
-      cancelled = true
-      if (animRef.current) {
-        animRef.current.pause()
-      }
-    }
-  }, [isOpen])
-
-  useEffect(() => {
-    if (!render || !isOpen || !panelRef.current) return
+    if (!isOpen || !panelRef.current) return
 
     let cancelled = false
     const panel = panelRef.current
@@ -116,7 +81,7 @@ export function MegaMenu({ isOpen, columns, projects, className }: MegaMenuProps
     import('animejs').then(({ animate, stagger }) => {
       if (cancelled || !panelRef.current) return
 
-      animRef.current = animate(panel, {
+      animate(panel, {
         opacity: [0, 1],
         translateY: [-4, 0],
         duration: 200,
@@ -139,19 +104,15 @@ export function MegaMenu({ isOpen, columns, projects, className }: MegaMenuProps
 
     return () => {
       cancelled = true
-      if (animRef.current) {
-        animRef.current.pause()
-      }
     }
-  }, [render, isOpen])
-
-  if (!render) return null
+  }, [isOpen])
 
   return (
     <div
       ref={panelRef}
       className={cn(
-        'absolute top-[calc(100%+4px)] z-50',
+        'absolute top-[calc(100%+4px)] z-50 transition-all duration-150 ease-in',
+        isOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-[-8px] pointer-events-none',
         projects ? 'left-1/2 ml-[-440px]' : 'left-0 right-0 mx-auto max-w-7xl px-xl lg:px-xxl',
         className,
       )}
