@@ -20,6 +20,7 @@ public sealed class AuditableInterceptors :SaveChangesInterceptor
             if (entity.State == EntityState.Added)
             {
                 entity.Property(nameof(IAuditable.CreatedOnUtc)).CurrentValue = now;
+                entity.Property(nameof(IAuditable.UpdatedOnUtc)).CurrentValue = now;
             }
 
             if (entity.State == EntityState.Modified)

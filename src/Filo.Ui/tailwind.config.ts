@@ -93,10 +93,15 @@ const config: Config = {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
+        'gradient-shift': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.4s ease-out both',
         'fade-in': 'fade-in 0.5s ease-out both',
+        'gradient-shift': 'gradient-shift 2s ease-in-out infinite',
       },
     },
   },
