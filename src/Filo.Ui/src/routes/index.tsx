@@ -1,11 +1,16 @@
-import { type RouteObject } from 'react-router-dom'
+/* eslint-disable react-refresh/only-export-components -- route config, not a component */
+
+import { lazy } from 'react'
+import type { RouteObject } from 'react-router-dom'
+import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { RootLayout } from '@/layouts/RootLayout'
-import { AuthGuard } from '@/components/AuthGuard'
 import { Home } from '@/pages/Home'
-import { Login } from '@/pages/Login'
-import { Dashboard } from '@/pages/Dashboard'
-import { NotFound } from '@/pages/NotFound'
-import { SystemInfo } from '@/pages/SystemInfo'
+
+const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
+const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })))
+const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
+const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
+const SystemInfo = lazy(() => import('@/pages/SystemInfo').then((m) => ({ default: m.SystemInfo })))
 
 export const routes: RouteObject[] = [
   {
@@ -21,11 +26,16 @@ export const routes: RouteObject[] = [
     element: <Login />,
   },
   {
-    element: <AuthGuard />,
+    path: '/dashboard',
+    element: <DashboardLayout />,
     children: [
       {
-        path: '/dashboard',
+        index: true,
         element: <Dashboard />,
+      },
+      {
+        path: 'profile',
+        element: <Profile />,
       },
     ],
   },
