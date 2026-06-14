@@ -53,6 +53,15 @@ internal sealed class OpenIdConnectConfigureOptions : IConfigureNamedOptions<Ope
         options.CorrelationCookie.Path = "/"; 
         options.NonceCookie.Path = "/";  
 
+        options.Events.OnRedirectToIdentityProviderForSignOut = context =>
+        {
+            var returnTo = $"{context.Request.Scheme}://{context.Request.Host}{context.Properties.RedirectUri ?? "/"}";
+            var logoutUri = $"https://{_options.Domain}/v2/logout?client_id={_options.BffClientId}&returnTo={Uri.EscapeDataString(returnTo)}";
+            context.Response.Redirect(logoutUri);
+            context.HandleResponse();
+            return Task.CompletedTask;
+        };
+
         options.Events.OnRemoteFailure = context =>
         {
             var logger = context.HttpContext.RequestServices

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { animate } from 'animejs'
 import { cn } from '@/utils/cn'
 
@@ -272,12 +273,12 @@ export function HeroShowcase({ className }: HeroShowcaseProps) {
           Filo organizes, finds, and shares your documents with AI-powered precision — so you can focus on what matters.
         </p>
         <div className="flex items-center gap-xl pt-xxl">
-          <a
-            href="/get-started"
+          <Link
+            to="/get-started"
             className="inline-flex items-center justify-center whitespace-nowrap bg-primary text-on-primary font-body text-button leading-button rounded-pill px-xl py-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-blue focus-visible:ring-offset-2"
           >
             Get Started
-          </a>
+          </Link>
           <a
             href="/know-more"
             className="font-body text-body text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-blue focus-visible:ring-offset-2"
